@@ -10,11 +10,11 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - startup.sh - starts Tomcat & MySQL servers after power cycle
  - web.xml - servlet mapping configuration for cybr endpoints
 
-install:
+## install:
  - cybrselfserve-install.sh - installation script
  - tomcat-users.xml - creates admin user w/ Cyberark1 password
 
-servlet-tests:
+## servlet-tests:
  - appgovdb-get - gets all access requests by status (approved, unprovisioned, provisioned, revoked, rejected)
  - cybrtest.config - provides env vars for scripts to simulate UI input
  - deprovision-with-servlets - access request revocation
@@ -26,16 +26,13 @@ servlet-tests:
  - vi-tomcat-out.sh - edit tomcat log
  - _old - old test scripts that can probably be deleted
 
-sailpoint:
- - sp-integration-notes - some early notes on learning sailpoint
-
-scratch:
+## scratch:
  - conjur-delete-project-and-safe.sh - script to delete Conjur policy artifacts for a project & safe corresponding to an access request
  - delete.yml - delete project/safe policy template
  - grant.yml - access grant policy
  - revoke.yml - access revoke policy
 
-src:
+## src:
  - AccessRequestParameters.java - structure for gson to hold access request values
  - AppGovDbServlet.java - GET/POST/PUT/DELETE functions for appgovdb
  - Config.java - reads & stores property file values in variables, and disables cert validation
@@ -78,3 +75,7 @@ mysql-connector-java-8.0.25.jar
  - azure - for appgovdb in azure (where Sailpoint VM in SkyTap can read it)
  - docinabox - target DB create/load/query
  - petclinic - target db create/load/query
+
+## sailpoint:
+ - sp-integration-notes - some early notes on learning sailpoint
+
