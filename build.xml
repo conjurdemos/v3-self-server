@@ -1,0 +1,67 @@
+<project name="CybrPlugin" basedir="." default="compile">
+    <property name="src.dir"		value="src"/>
+    <property name="lib.dir"		value="lib"/>
+    <property name="deps.dir"		value="dependencies"/>
+    <property name="build.dir"		value="classes"/>
+    <property name="main-class"		value="CybrDriver"/>
+    <property name="tomcat-base" value="/usr/local/tomcat9"/>
+    <property name="cybr-base"	value="${tomcat-base}/webapps/cybr/WEB-INF"/>
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+        <fileset dir="${deps.dir}" includes="*.jar"/>
+	<fileset dir="${tomcat-base}/lib" includes="*.jar"/>
+    </path>
+
+    <target name="init">
+	<copy file="${deps.dir}/mysql-connector-java-8.0.25.jar" todir="${tomcat-base}/lib"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <delete dir="${lib.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+        <delete dir="${cybr-base}"/>
+        <mkdir dir="${cybr-base}"/>
+    </target>
+
+    <target name="compile">
+        <javac srcdir="src" destdir="${build.dir}" classpathref="classpath"/>
+        <jar destfile="${lib.dir}/CybrJava.jar"> 
+	  <fileset dir="${build.dir}">
+	    <exclude name="*Servlet.class"/>
+	    <exclude name="CybrDriver*.class"/>
+	  </fileset>
+	</jar>
+    </target>
+
+    <target name="driver" depends="compile">
+        <jar destfile="${lib.dir}/CybrDriver.jar" basedir="${build.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+            </manifest>
+	</jar>
+    </target>
+
+    <target name="publish" depends="clean,compile">
+	<mkdir dir="${cybr-base}/lib"/>
+	<copy todir="${cybr-base}/lib">
+	  <fileset dir="${lib.dir}">
+	    <exclude name="CybrDriver.jar"/>
+	  </fileset>
+	  <fileset dir="${deps.dir}">
+	    <exclude name="mysql-connector-java-8.0.25.jar"/>
+	  </fileset>
+	</copy>
+
+	<mkdir dir="${cybr-base}/classes"/>
+	<copy todir="${cybr-base}/classes">
+	  <fileset dir="${build.dir}" includes="*Servlet.class"/>
+	</copy>
+
+	<copy file="cybrselfserve.properties" todir="${cybr-base}"/>
+	<copy file="web.xml" todir="${cybr-base}"/>
+    </target>
+
+</project>

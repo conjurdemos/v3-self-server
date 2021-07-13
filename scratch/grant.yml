@@ -1,0 +1,3 @@
+- !grant
+  role: !group PetClinicDev/consumers
+  member: !host app-example-sidecar

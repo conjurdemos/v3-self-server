@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# This test script exercises the servlet endpoints that are called
+# from the ProvisioningServlet. It simulates the provisioning flow 
+# of the ProvisioningServlet.doPost() function using values that are
+# supplied as environment variables, rather than pulled from the appgovdb.
+
+source ./cybrtest.config
+
+export CURL="curl -s"
+export BASE_URL=http://localhost:8080/cybr
+export DEBUG=true
+
+# accessrequest json record (for reference, not used here)
+jsonTest="{\"projectName\":\"$PROJECT_NAME\",\"requestor\":\"$PROJECT_REQUESTOR\", \"approved\": 0, \"environment\":\"$PROJECT_ENVIRONMENT\", \"pasVaultName\":\"$PAS_VAULT_NAME\", \"pasSafeName\":\"$PAS_SAFE_NAME\", \"pasCpmName\":\"$PAS_CPM_NAME\", \"pasLobName\":\"$PAS_LOB_NAME\", \"appIdName\":\"$PROJECT_IDENTITY\", \"appAuthnMethod\":\"authn-k8s\"}"
+
+main() {
+  # Login as admin to PAS
+  PASauthnCreds=$(echo "$PAS_ADMIN_NAME:$PAS_ADMIN_PASSWORD" | base64)
+  pasAuthnResponse=$($CURL -H "Authorization: Basic $PASauthnCreds" -H "Content-Type: application/json" "$BASE_URL/pas/login")
+  test "paslogin" "$pasAuthnResponse"
+
+  # Login as admin to Conjur
+  ConjurAuthnCreds=$(echo "$CONJUR_ADMIN_NAME:$CONJUR_ADMIN_PASSWORD" | base64)
+  conjurAuthnResponse=$($CURL -H "Authorization: Basic $ConjurAuthnCreds" -H "Content-Type: application/json" "$BASE_URL/conjur/login")
+  test "conjurlogin" "$conjurAuthnResponse"
+
+  # Add a safe w/ Conjur synch policy (safe is only created if it doesn't exist)
+  safeAdd=$($CURL -X POST --url "$BASE_URL/pas/safes?safeName=$PAS_SAFE_NAME&cpmName=$PAS_CPM_NAME&lobName=$PAS_LOB_NAME&vaultName=$PAS_VAULT_NAME")
+  test "safeAdd" "$safeAdd"
+
+  read -n 1 -s -r -p "Press any key to continue"
+  echo
+
+  # Create Conjur base policy for project
+  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/basepolicy?projectName=$PROJECT_NAME&adminName=$PROJECT_ADMIN")
+  test "basePolicy" "$authnResponse"
+
+  read -n 1 -s -r -p "Press any key to continue"
+  echo
+
+  # Create Conjur safe consumer group under project's base policy
+  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/safepolicy?projectName=$PROJECT_NAME&vaultName=$PAS_VAULT_NAME&lobName=$PAS_LOB_NAME&safeName=$PAS_SAFE_NAME")
+  test "safePolicy" "$authnResponse"
+
+  read -n 1 -s -r -p "Press any key to continue"
+  echo
+
+  # Create Conjur identity under project's base policy
+  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/identitypolicy?projectName=$PROJECT_NAME&identityName=$PROJECT_IDENTITY")
+  test "identityPolicy" "$authnResponse"
+
+  read -n 1 -s -r -p "Press any key to continue"
+  echo
+
+  # Grant safe policy role to identity 
+  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/accesspolicy?projectName=$PROJECT_NAME&identityName=$CONJUR_IDENTITY&groupRoleName=$CONJUR_GROUP_ROLE")
+  test "accessgrant" "$authnResponse"
+}
+
+###################################
+test() {
+  if ! $DEBUG; then return; fi
+  local funcname=$1; shift
+  local value="$(echo $1 | tr -d '\r\n')"; shift
+
+  if [[ $value == null ]]; then
+    echo "$funcname returned null."
+  else
+    echo "$funcname returned:"
+    echo "$value"
+    echo
+  fi
+}
+
+main "$@"
