@@ -11,29 +11,29 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - web.xml - servlet mapping configuration for cybr endpoints
 
 install:
- - cybrselfserve-install.sh
- - tomcat-users.xml
+ - cybrselfserve-install.sh - installation script
+ - tomcat-users.xml - creates admin user w/ Cyberark1 password
 
 servlet-tests:
- - _old
- - appgovdb-get
- - cybrtest.config
- - deprovision-with-servlets
- - governance-get
- - gui-lifecycle
- - provision-with-servlets
- - tail-catalina-out.sh
- - tomcat-debug-logs.sh
- - vi-tomcat-out.sh
+ - appgovdb-get - gets all access requests by status (approved, unprovisioned, provisioned, revoked, rejected)
+ - cybrtest.config - provides env vars for scripts to simulate UI input
+ - deprovision-with-servlets - access request revocation
+ - governance-get - gets json record used in access review (auditor) ui
+ - gui-lifecycle - access request submittal, approval, provisioning & revocation
+ - provision-with-servlets - access request provisioning
+ - tail-catalina-out.sh - follows tomcat log to monitor servlet execution
+ - tomcat-debug-logs.sh - cats various logs for debugging
+ - vi-tomcat-out.sh - edit tomcat log
+ - _old - old test scripts that can probably be deleted
 
 sailpoint:
- - sp-integration-notes
+ - sp-integration-notes - some early notes on learning sailpoint
 
 scratch:
- - conjur-delete-project-and-safe.sh
- - delete.yml
- - grant.yml
- - revoke.yml
+ - conjur-delete-project-and-safe.sh - script to delete Conjur policy artifacts for a project & safe corresponding to an access request
+ - delete.yml - delete project/safe policy template
+ - grant.yml - access grant policy
+ - revoke.yml - access revoke policy
 
 src:
  - AccessRequestParameters.java - structure for gson to hold access request values
