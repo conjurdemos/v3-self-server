@@ -7,7 +7,7 @@ main() {
   install-ssh
   install-java
   install-tomcat
-  install-mysql
+  install-mysql8
   sudo apt install -y git ant curl jq python3-tk
   echo "Installation complete."
   echo "To configure & test:"
@@ -64,11 +64,7 @@ install-tomcat() {
 }
 
 #############################
-# Please see below and comment/uncomment based on
-# MySQL version installed.
-# $ mysql -V
-# Note: Vagrant has MySQL v8 installed.
-install-mysql() {
+install-mysql5() {
   sudo apt update -y
   sudo apt install -y mysql-server
   sudo service mysql stop
@@ -81,12 +77,34 @@ install-mysql() {
   echo
   echo "waiting 10 seconds for db to initialize..."
   sleep 10
-  ######## MYSQL 8.x
+  ######## MYSQL 5.x
+  sudo mysql --user=root \
+    -e "UPDATE mysql.user SET authentication_string=PASSWORD('Cyberark1') WHERE user='root'; UPDATE mysql.user SET plugin='mysql_native_password' WHERE user='root'; FLUSH PRIVILEGES;"
+  for i in $(ps -aux | grep mysql | grep -v grep | awk '{print $2}'); do
+    sudo kill -9 "$i"
+  done
+  sudo service mysql start
+}
+
+#############################
+install-mysql8() {
+  wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.11-1_all.deb
+  sudo dpkg -i mysql-apt-config_0.8.10-1_all.deb
+  sudo apt-get update -y
+  sudo apt-get install -y mysql-server
+  sudo mysql_secure_installation
+  sudo service mysql stop
+  while [[ "$(ps -aux | grep mysql | grep -v grep)" != "" ]]; do
+    sleep 3
+  done
+  sudo mkdir -p /var/run/mysqld; sudo chown mysql:mysql /var/run/mysqld
+  sudo mysqld_safe --skip-grant-tables &
+  echo
+  echo
+  echo "waiting 10 seconds for db to initialize..."
+  sleep 10
   sudo mysql --user=root \
     -e "UPDATE mysql.user SET authentication_string=null WHERE user='root'; FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Cyberark1'; FLUSH PRIVILEGES;"
-  ######## MYSQL 5.x
-  # sudo mysql --user=root \
-  #   -e "UPDATE mysql.user SET authentication_string=PASSWORD('Cyberark1') WHERE user='root'; UPDATE mysql.user SET plugin='mysql_native_password' WHERE user='root'; FLUSH PRIVILEGES;"
   for i in $(ps -aux | grep mysql | grep -v grep | awk '{print $2}'); do
     sudo kill -9 "$i"
   done
