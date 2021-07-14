@@ -63,8 +63,8 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - old - code that my still be useful maybe?
 
 ## dependencies:
-gson-2.8.5.jar
-mysql-connector-java-8.0.25.jar
+ - gson-2.8.5.jar
+ - mysql-connector-java-8.0.25.jar
 
 ## mysql:
  - mysql.config - URL of database (container values for MySQL)
