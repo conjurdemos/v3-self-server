@@ -88,8 +88,8 @@ install-mysql5() {
 
 #############################
 install-mysql8() {
-  wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.11-1_all.deb
-  sudo dpkg -i mysql-apt-config_0.8.10-1_all.deb
+  wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.17-1_all.deb
+  sudo dpkg -i mysql-apt-config_0.8.17-1_all.deb
   sudo apt-get update -y
   sudo apt-get install -y mysql-server
   sudo mysql_secure_installation
