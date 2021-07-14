@@ -48,16 +48,16 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - JavaREST.java - Java HTTP functions (GET/POST/PATCH/DELETE)
  - KeyValue.java - structure for gson
  - PASAccount.java - structure for gson to hold PASAccount info
- - PASAccountDetail.java - structure for gson to hold PASAccount info
- - PASAccountDetailList.java - structure for gson to hold PASAccount info
- - PASAccountList.java - structure for gson to hold PASAccount info
+ - PASAccountDetail.java - structure for gson to hold PASAccountDetail info
+ - PASAccountDetailList.java - structure for gson to hold PASAccountDetailList info
+ - PASAccountList.java - structure for gson to hold PASAccountList info
  - PASAccountServlet.java - POST/DELETE functions to create/delete accounts in safes (not used)
  - PASBasicAuthFilter.java - supports admin/pasword authn to PVWA
  - PASJava.java - Java wrappers for PAS REST APIs
- - PASPlatformProperties.java - structure for gson to hold PASAccount info
- - PASRemoteMachinesAccess.java - structure for gson to hold PASAccount info
+ - PASPlatformProperties.java - structure for gson to hold PASPlatformProperties info
+ - PASRemoteMachinesAccess.java - structure for gson to hold PASRemoteMachinesAccess info
  - PASSafeServlet.java - POST/DELETE functions to create/delete Safes in PAS
- - PASSecretManagement.java - structure for gson to hold PASAccount info
+ - PASSecretManagement.java - structure for gson to hold PASSecretManagement info
  - PASServlet.java - placeholder for basic auth
  - ProvisioningServlet.java - POST/DELETE functions that call other servlets to provision/deprovision access requests
  - old - code that my still be useful maybe?
