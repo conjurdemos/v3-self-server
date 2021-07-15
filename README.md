@@ -3,7 +3,7 @@
 Tomcat & MySQL servers to support self-service access request workflows.
 
 ## Top directory:
- - Vagrantfile - brings up base ubuntu18 vm with 'vagrant up'
+ - Vagrantfile - brings up base ubuntu18 vm with 'vagrant up'. vagrant installation script in ./bin/
  - _checkin.sh - git add/commit/push to specified branch
 
 ## bin:
@@ -52,6 +52,22 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - gson-2.8.5.jar
  - mysql-connector-java-8.0.25.jar
  
+## mysql:
+ - mysql.config - URL of database (container values for MySQL)
+ - exec-to-db-server.sh - interactive mysql cli
+ - mysql-pids-cleanup.sh - deletes stale connections
+ - mysql-pids-status.sh - list active/stale connections to server
+ - appgovdb - create/load/query appgovdb
+ - azure - for appgovdb in azure (where Sailpoint VM in SkyTap can read it)
+ - docinabox - target DB create/load/query
+ - petclinic - target db create/load/query
+
+## policy-edit:
+ - conjur-delete-project-and-safe.sh - script to delete Conjur policy artifacts for a project & safe corresponding to an access request
+ - delete.yml - delete project/safe policy template
+ - grant.yml - access grant policy
+ - revoke.yml - access revoke policy
+ - 
 ## servlet-tests:
  - appgovdb-get - gets all access requests by status (approved, unprovisioned, provisioned, revoked, rejected)
  - cybrtest.config - provides env vars for scripts to simulate UI input
@@ -63,23 +79,4 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - tomcat-debug-logs.sh - cats various logs for debugging
  - vi-tomcat-out.sh - edit tomcat log
  - _old - old test scripts that can probably be deleted
-
-## scratch:
- - conjur-delete-project-and-safe.sh - script to delete Conjur policy artifacts for a project & safe corresponding to an access request
- - delete.yml - delete project/safe policy template
- - grant.yml - access grant policy
- - revoke.yml - access revoke policy
-
-## mysql:
- - mysql.config - URL of database (container values for MySQL)
- - exec-to-db-server.sh - interactive mysql cli
- - mysql-pids-cleanup.sh - deletes stale connections
- - mysql-pids-status.sh - list active/stale connections to server
- - appgovdb - create/load/query appgovdb
- - azure - for appgovdb in azure (where Sailpoint VM in SkyTap can read it)
- - docinabox - target DB create/load/query
- - petclinic - target db create/load/query
-
-## sailpoint:
- - sp-integration-notes - some early notes on learning sailpoint
 
