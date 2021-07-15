@@ -12,4 +12,6 @@ echo "Size after cleaning:" $(du -sh .)
 git add .
 git commit -m "checkpoint commit"
 git push origin $1
+cd build
 ./ant.sh publish	# rebuild after cleaning
+cd ..
