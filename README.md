@@ -2,37 +2,23 @@
 
 Tomcat & MySQL servers to support self-service access request workflows.
 
-## Top directory
+## Top directory:
+ - Vagrantfile - brings up base ubuntu18 vm with 'vagrant up'
  - _checkin.sh - git add/commit/push to specified branch
+
+## bin:
+ - setup_vagrant.sh - installs/configures vagrant
+ - cybrselfserve-install.sh - installation script
+ - tomcat-users.xml - creates admin user w/ Cyberark1 password
+ - restart_servers.sh - stops/starts mysql and tomcat servers
+
+## build:
  - ant.sh - build script driven from build.xml
  - build.xml - declarative build instructions for Java/Tomcat
  - cybrselfserve.properties - property file w/ config & authn values
- - startup.sh - starts Tomcat & MySQL servers after power cycle
  - web.xml - servlet mapping configuration for cybr endpoints
 
-## install:
- - cybrselfserve-install.sh - installation script
- - tomcat-users.xml - creates admin user w/ Cyberark1 password
-
-## servlet-tests:
- - appgovdb-get - gets all access requests by status (approved, unprovisioned, provisioned, revoked, rejected)
- - cybrtest.config - provides env vars for scripts to simulate UI input
- - deprovision-with-servlets - access request revocation
- - governance-get - gets json record used in access review (auditor) ui
- - gui-lifecycle - access request submittal, approval, provisioning & revocation
- - provision-with-servlets - access request provisioning
- - tail-catalina-out.sh - follows tomcat log to monitor servlet execution
- - tomcat-debug-logs.sh - cats various logs for debugging
- - vi-tomcat-out.sh - edit tomcat log
- - _old - old test scripts that can probably be deleted
-
-## scratch:
- - conjur-delete-project-and-safe.sh - script to delete Conjur policy artifacts for a project & safe corresponding to an access request
- - delete.yml - delete project/safe policy template
- - grant.yml - access grant policy
- - revoke.yml - access revoke policy
-
-## src:
+### src:
  - AccessRequestParameters.java - structure for gson to hold access request values
  - AppGovDbServlet.java - GET/POST/PUT/DELETE functions for appgovdb
  - Config.java - reads & stores property file values in variables, and disables cert validation
@@ -62,9 +48,27 @@ Tomcat & MySQL servers to support self-service access request workflows.
  - ProvisioningServlet.java - POST/DELETE functions that call other servlets to provision/deprovision access requests
  - old - code that my still be useful maybe?
 
-## dependencies:
+### dependencies:
  - gson-2.8.5.jar
  - mysql-connector-java-8.0.25.jar
+ 
+## servlet-tests:
+ - appgovdb-get - gets all access requests by status (approved, unprovisioned, provisioned, revoked, rejected)
+ - cybrtest.config - provides env vars for scripts to simulate UI input
+ - deprovision-with-servlets - access request revocation
+ - governance-get - gets json record used in access review (auditor) ui
+ - gui-lifecycle - access request submittal, approval, provisioning & revocation
+ - provision-with-servlets - access request provisioning
+ - tail-catalina-out.sh - follows tomcat log to monitor servlet execution
+ - tomcat-debug-logs.sh - cats various logs for debugging
+ - vi-tomcat-out.sh - edit tomcat log
+ - _old - old test scripts that can probably be deleted
+
+## scratch:
+ - conjur-delete-project-and-safe.sh - script to delete Conjur policy artifacts for a project & safe corresponding to an access request
+ - delete.yml - delete project/safe policy template
+ - grant.yml - access grant policy
+ - revoke.yml - access revoke policy
 
 ## mysql:
  - mysql.config - URL of database (container values for MySQL)
