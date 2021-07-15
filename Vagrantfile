@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "infamousjoeg/v3-self-server"
+  config.vm.box = "ubuntu/bionic64"
   config.vm.disk :disk, size: "20GB", primary: true
 
   # Disable automatic box update checking. If you disable this, then
@@ -31,10 +31,10 @@ Vagrant.configure("2") do |config|
   #
   config.vm.provider "virtualbox" do |vb|
     # Display the VirtualBox GUI when booting the machine
-    vb.gui = true
+    vb.gui = false
 
     # Customize the amount of memory on the VM:
-    vb.memory = "4096"
+    vb.memory = "2048"
   end
 end
 

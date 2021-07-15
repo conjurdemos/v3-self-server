@@ -3,7 +3,6 @@
 main () {
     update_yumaptbrew
     install_vagrant
-    add_vagrant_box
     echo "All ready for \`vagrant up\` command!"
 }
 
@@ -52,9 +51,4 @@ install_vagrant () {
                 ;;
         esac
     fi
-}
-
-add_vagrant_box () {
-    curl -fsSL https://conjurdemoassets.s3.amazonaws.com/v3-self-server-v1.0.1.box
-    vagrant box add --box-version 1.0.1 infamousjoeg/v3-self-server v3-self-server-v1.0.1.box
 }

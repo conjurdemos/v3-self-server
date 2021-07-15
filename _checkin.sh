@@ -5,6 +5,7 @@ if [[ "$#" != 1 ]]; then
 fi
 echo "Size before cleaning:" $(du -sh .)
 ./ant.sh clean		# delete built binaries & caches
+rm ubuntu*.log
 echo "Size after cleaning:" $(du -sh .)
 git add .
 git commit -m "checkpoint commit"
