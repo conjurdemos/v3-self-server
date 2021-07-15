@@ -4,7 +4,9 @@ if [[ "$#" != 1 ]]; then
   exit -1
 fi
 echo "Size before cleaning:" $(du -sh .)
-./ant.sh clean		# delete built binaries & caches
+cd build
+ ./ant.sh clean		# delete built binaries & caches
+cd ..
 rm ubuntu*.log
 echo "Size after cleaning:" $(du -sh .)
 git add .
