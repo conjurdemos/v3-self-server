@@ -332,74 +332,12 @@ public class AppGovDbServlet extends HttpServlet {
     }
 
     // autoprovision requests for dev environment safes
-    // this should be a property of the resource, not the request
+    // DEBT - this should be a property of the resource, not the request
     if (arParms.environment.equals("dev")) {
         String requestUrl = Config.selfServeBaseUrl + "/provision"
    		                               + "?accReqId=" + Long.toString(accReqId);
         logger.log(Level.INFO, "Autoprovisioning for dev environment: " + requestUrl);
         String provisioningResponse = JavaREST.httpPost(requestUrl, "", "");
-    }
-
-/*
-    Code below retrieves accounts in safe and write account property data to cybraccounts table.
-    This is the only function that needs access to PAS, and therefore may not really
-    belong in this servlet.
-    This info is used to track app identity access to resources brokered through CyberArk accounts
-    Currently only database accounts with non-null database properties are supported.
-    This info might be useful for understanding the implication of granting the requested access.  JH
-*/
-    PASJava.logon(Config.pasAdminUser, Config.pasAdminPassword);
-    String pasAccountJson = PASJava.getAccounts(arParms.pasSafeName);
-    gson = new Gson();				// parse json output into PASAccountList
-    PASAccountList accList = (PASAccountList) gson.fromJson(pasAccountJson, PASAccountList.class );
-    try {
-      querySql = "INSERT IGNORE INTO cybraccounts "
-			+ "(safe_id, name, platform_id, secret_type, username, address, resource_type, resource_name)"
-			+ "VALUES "
-			+ "(?,?,?,?,?,?,?,?)";
-      prepStmt = conn.prepareStatement(querySql);
-      for(int i = 0; i < accList.value.length; i++) {
-
-        // determine if a database based on account platform properties, skip if not a database or has no database named
-        String resourceType = "";
-        String resourceName = "";
-        if(accList.value[i].platformAccountProperties != null) {
-          if(accList.value[i].platformAccountProperties.Database != null) {
-	    resourceType = "database";
-	    resourceName = accList.value[i].platformAccountProperties.Database;
-	  }
-	}
-        if(resourceType == "") {
-          logger.log(Level.INFO, "Access for account \'" + accList.value[i].name + "\' will not be recorded. Only PAS database accounts with non-empty property values for 'database' are supported.");
-	  continue;
-	}
-
-        prepStmt.setString(1, safeId);
-        prepStmt.setString(2, accList.value[i].name);
-        prepStmt.setString(3, accList.value[i].platformId);
-        prepStmt.setString(4, accList.value[i].secretType);
-        prepStmt.setString(5, accList.value[i].userName);
-        prepStmt.setString(6, accList.value[i].address);
-        prepStmt.setString(7, resourceType);
-        prepStmt.setString(8, resourceName);
-        prepStmt.executeUpdate();
-        conn.commit();
-        logger.log(Level.INFO, "write account records :"
-                                + "\n  query template: " + querySql
-                                + "\n  values: "
-                                + safeId + ", "
-				+ accList.value[i].name + ", "
-				+ accList.value[i].platformId + ", "
-				+ accList.value[i].secretType + ", "
-				+ accList.value[i].userName + ", "
-				+ accList.value[i].address + ", "
-                                + resourceType + ", "
-                                + resourceName);
-      }
-      conn.commit();
-      prepStmt.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
     }
 
     // close the database connection

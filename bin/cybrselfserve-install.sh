@@ -16,9 +16,12 @@ main() {
   echo "  1) cd ../build"
   echo "  2) edit cybrselfserve.properties with your PAS & Conjur config details"
   echo "  3) run: ./ant.sh publish"
-  echo "  4) cd ../servlet-tests"
-  echo "  5) run: liveness-test.sh"
+  echo "  4) exit/vagrant ssh, or logoff/logon to set env vars"
+  echo "  5) cd ../servlet-tests"
+  echo "  6) run: liveness-test.sh"
   echo
+  echo "If that looks good, install the UI and you should be ready to demo."
+  echo "If not, run 'tomcat_debug_logs.sh' to see what may be the problem."
 }
 
 #############################
