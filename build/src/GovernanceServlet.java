@@ -46,6 +46,8 @@ public class GovernanceServlet extends HttpServlet {
     } catch (IOException e) {
       System.out.println("Exception: " + e);
     } 
+    PASJava.initConnection(Config.pasIpAddress);
+    Config.disableCertValidation();
   }
 
   // +++++++++++++++++++++++++++++++++++++++++
@@ -69,6 +71,85 @@ public class GovernanceServlet extends HttpServlet {
     String querySql = "";
     PreparedStatement prepStmt = null;
     String returnJson = "";
+
+    /*
+    Code in first try block rebuilds the cybraccounts table. It truncates the table to delete
+    all rolws then retrieves all the  accounts in a safe for any active (provisioned, not revoked)
+    access request. Retrieval is done here to ensure identity access views are up-to-date with the
+    contents of safes.
+    Currently only database accounts with non-null database properties are supported.
+    */
+    PASJava.logon(Config.pasAdminUser, Config.pasAdminPassword);
+    Gson gson = new Gson();				// parse json output into PASAccountList
+    try {
+      querySql = "TRUNCATE TABLE cybraccounts";		// delete all rows in cybraccounts
+      prepStmt = conn.prepareStatement(querySql);
+      prepStmt.executeUpdate();
+
+      querySql = "SELECT sf.id, sf.name"
+	      	+ " FROM safes sf, accessrequests ar"
+		+ " WHERE ar.provisioned AND NOT ar.revoked "
+		+ " AND ar.safe_id = sf.id";
+      prepStmt = conn.prepareStatement(querySql);
+      ResultSet rsSf = prepStmt.executeQuery();
+      while(rsSf.next() ) {				// for each safe
+        String safeId = rsSf.getString(1);
+        String safeName = rsSf.getString(2);
+							// get list of accounts
+	String pasAccountJson = PASJava.getAccounts(safeName);
+        PASAccountList accList = (PASAccountList) gson.fromJson(pasAccountJson, PASAccountList.class );
+        querySql = "INSERT IGNORE INTO cybraccounts"
+			+ " (safe_id, name, platform_id, secret_type, username, address, resource_type, resource_name)"
+			+ " VALUES"
+			+ " (?,?,?,?,?,?,?,?)";
+        prepStmt = conn.prepareStatement(querySql);
+        for(int i = 0; i < accList.value.length; i++) {	// for each account in safe
+
+          // determine if account is for a database based on account platform properties,
+	  // skip if not a database or does not name a database
+          String resourceType = "";
+          String resourceName = "";
+          if(accList.value[i].platformAccountProperties != null) {
+            if(accList.value[i].platformAccountProperties.Database != null) {
+              resourceType = "database";
+	      resourceName = accList.value[i].platformAccountProperties.Database;
+	    }
+          }
+          if(resourceType == "") {
+            logger.log(Level.INFO, "Access for account \'" + accList.value[i].name + "\' will not be recorded. Only PAS database accounts with non-empty property values for 'database' are supported.");
+	    continue;
+	  }
+
+          prepStmt.setString(1, safeId);
+          prepStmt.setString(2, accList.value[i].name);
+          prepStmt.setString(3, accList.value[i].platformId);
+          prepStmt.setString(4, accList.value[i].secretType);
+          prepStmt.setString(5, accList.value[i].userName);
+          prepStmt.setString(6, accList.value[i].address);
+          prepStmt.setString(7, resourceType);
+          prepStmt.setString(8, resourceName);
+          prepStmt.executeUpdate();
+          conn.commit();
+          logger.log(Level.INFO, "write account records :"
+                                + "\n  query template: " + querySql
+                                + "\n  values: "
+                                + safeId + ", "
+				+ accList.value[i].name + ", "
+				+ accList.value[i].platformId + ", "
+				+ accList.value[i].secretType + ", "
+				+ accList.value[i].userName + ", "
+				+ accList.value[i].address + ", "
+                                + resourceType + ", "
+                                + resourceName);
+        } // for each account in safe
+      } // for each safe
+      prepStmt.close();
+    } catch (SQLException e) {
+      logger.log(Level.INFO, "Error id identity access query:\n  query template: " + querySql);
+      e.printStackTrace();
+    }
+
+    // this try block assembles the json response
     try {
       // Get distinct provisioned project IDs
       querySql = "SELECT DISTINCT ar.project_id, pr.name"
