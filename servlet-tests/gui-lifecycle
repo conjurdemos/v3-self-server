@@ -12,12 +12,20 @@ export BASE_URL=http://localhost:8080/cybr
 export DEBUG=true
 
 # accessrequest json record - same format as submitted from access request UI
-jsonTest="{\"projectName\":\"$PROJECT_NAME\",\"requestor\":\"$PROJECT_REQUESTOR\", \"approved\": 0, \"environment\":\"$PROJECT_ENVIRONMENT\", \"pasVaultName\":\"$PAS_VAULT_NAME\", \"pasSafeName\":\"$PAS_SAFE_NAME\", \"pasCpmName\":\"$PAS_CPM_NAME\", \"pasLobName\":\"$PAS_LOB_NAME\", \"appIdName\":\"$PROJECT_IDENTITY\", \"appAuthnMethod\":\"authn-k8s\"}"
+arJsonTest="{\"projectName\":\"$PROJECT_NAME\",\"requestor\":\"$PROJECT_REQUESTOR\", \"approved\": 0, \"environment\":\"$PROJECT_ENVIRONMENT\", \"pasVaultName\":\"$PAS_VAULT_NAME\", \"pasSafeName\":\"$PAS_SAFE_NAME\", \"pasCpmName\":\"$PAS_CPM_NAME\", \"pasLobName\":\"$PAS_LOB_NAME\", \"appIdName\":\"$PROJECT_IDENTITY\", \"appAuthnMethod\":\"authn-k8s\"}"
+
+prJsonTest="{\"projectName\":\"$PROJECT_NAME\",\"adminName\":\"$PROJECT_ADMIN\", \"billingCode\":\"1234\"}"
 
 main() {
 
+  echo "Onboarding project (project POST)..."
+  projResponse=$($CURL -X POST -H "Content-Type: application/json" --data "$prJsonTest" "$BASE_URL/project")
+  test "OnboardProject" "$projResponse"
+
+exit
+
   echo "Submitting unapproved access request (appgovdb POST)..."
-  appDbResponse=$($CURL -X POST -H "Content-Type: application/json" --data "$jsonTest" "$BASE_URL/appgovdb")
+  appDbResponse=$($CURL -X POST -H "Content-Type: application/json" --data "$arJsonTest" "$BASE_URL/appgovdb")
   test "submitRequest" "$appDbResponse"
 
   accReqId=$(echo $appDbResponse | jq .accessRequestId)

@@ -105,6 +105,24 @@
   </servlet-mapping>
 
   <servlet>
+    <servlet-name>project</servlet-name>
+    <servlet-class>ProjectServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>project</servlet-name>
+    <url-pattern>/project</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>user</servlet-name>
+    <servlet-class>PASUserServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>user</servlet-name>
+    <url-pattern>/user</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
     <servlet-name>appgovdb</servlet-name>
     <servlet-class>AppGovDbServlet</servlet-class>
   </servlet>
