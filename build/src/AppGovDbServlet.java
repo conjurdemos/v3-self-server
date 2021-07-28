@@ -1,4 +1,14 @@
 /*
+  Implements:
+  - doGet(state) - returns json array of access requests matching state
+  - doPost() <json body> - reads json for new unapproved access request and inserts values into DB
+  - doPut(accReqId, newState) - updates access request with status change
+
+  State transitions: unapproved -> unprovisioned -> provisioned -> revoked
+			\-> rejected <-/
+*/
+
+/*
   Help on how to write a servlet that accepts json input payloads:
    https://stackoverflow.com/questions/3831680/httpservletrequest-get-json-post-data
 
@@ -184,33 +194,20 @@ public class AppGovDbServlet extends HttpServlet {
     // Write project variables to projects table and get DB-assigned projectId for foreign keys
     String projectId = "";
     try {
-      querySql = "INSERT IGNORE INTO projects(name,admin_user) VALUES(?,?)"; // IGNORE duplicate index value
-      prepStmt = conn.prepareStatement(querySql);
-      prepStmt.setString(1, arParms.projectName);
-      prepStmt.setString(2, arParms.projectName + "-admin");
-      prepStmt.executeUpdate();
-      conn.commit();
-
       // Query for project/admin name to get project ID
-      querySql = "SELECT id FROM projects WHERE name = ? AND admin_user = ?";
+      querySql = "SELECT id FROM projects WHERE name = ?";
       prepStmt = conn.prepareStatement(querySql);
       prepStmt.setString(1, arParms.projectName);
-      prepStmt.setString(2, arParms.projectName + "-admin");
       ResultSet rs = prepStmt.executeQuery();
       if(rs.next() ) {		// if something returned, get project ID
         projectId = String.valueOf(rs.getInt(1));
       }
       else {
-	throw new SQLException("Unable to get project id after INSERT.");
+	throw new SQLException("Unable to get project id for project: " + arParms.projectName);
       }
       conn.commit();
-      prepStmt.close();
-      logger.log(Level.INFO, "write project record:"
-				+ "\n  query template: " + querySql
-				+ "\n  values: " + arParms.projectName + ", " + arParms.projectName + "-admin"
-				+ "\n  projectId: " + projectId);
     } catch (SQLException e) {
-      logger.log(Level.INFO, "Error getting/adding project for name/admin: "+arParms.projectName +"/"+ arParms.projectName+"-admin"
+      logger.log(Level.INFO, "Error getting project: "
 				+ "\n  query template: " + querySql
 				+ "\n  values: " + arParms.projectName + ", " + arParms.projectName + "-admin");
       e.printStackTrace();
@@ -298,7 +295,11 @@ public class AppGovDbServlet extends HttpServlet {
       prepStmt.setString(2, appId);
       prepStmt.setString(3, safeId);
       prepStmt.setString(4, timeStamp);
-      prepStmt.setString(5, arParms.approved.toString());
+      if (arParms.environment.equals("dev")) {	// auto-approve access requests for dev envs
+        prepStmt.setString(5, "1");
+      } else {
+        prepStmt.setString(5, arParms.approved.toString());
+      }
       prepStmt.setString(6, arParms.environment);
       prepStmt.setString(7, arParms.pasLobName);
       prepStmt.setString(8, arParms.requestor);
@@ -331,13 +332,13 @@ public class AppGovDbServlet extends HttpServlet {
       e.printStackTrace();
     }
 
-    // autoprovision requests for dev environment safes
-    // DEBT - this should be a property of the resource, not the request
-    if (arParms.environment.equals("dev")) {
-        String requestUrl = Config.selfServeBaseUrl + "/provision"
-   		                               + "?accReqId=" + Long.toString(accReqId);
-        logger.log(Level.INFO, "Autoprovisioning for dev environment: " + requestUrl);
-        String provisioningResponse = JavaREST.httpPost(requestUrl, "", "");
+   // autoprovision requests for dev environment safes
+   // DEBT - this should be a property of the resource, not the request
+   if (arParms.environment.equals("dev")) {
+     String requestUrl = Config.selfServeBaseUrl + "/provision"
+     		                                 + "?accReqId=" + Long.toString(accReqId);
+     logger.log(Level.INFO, "Autoprovisioning for dev environment: " + requestUrl);
+     String provisioningResponse = JavaREST.httpPost(requestUrl, "", "");
     }
 
     // close the database connection

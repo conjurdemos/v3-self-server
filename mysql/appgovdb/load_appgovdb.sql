@@ -145,7 +145,7 @@ CREATE TABLE `projects` (
 
 LOCK TABLES `projects` WRITE;
 /*!40000 ALTER TABLE `projects` DISABLE KEYS */;
-INSERT INTO `projects` VALUES (1,'DevProject','DevProject-admin',NULL),(2,'ProdProject','ProdProject-admin',NULL),(3,'TestProject','TestProject-admin',NULL);
+INSERT INTO `projects` VALUES (1,'DevProject','DevAdmin1',NULL),(2,'ProdProject','ProdAdmin1',NULL),(3,'TestProject','TestAdmin1',NULL);
 /*!40000 ALTER TABLE `projects` ENABLE KEYS */;
 UNLOCK TABLES;
 

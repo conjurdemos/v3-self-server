@@ -1,2 +1,2 @@
 - !delete
-  record: !host bob
+  record: !group ProdProject/PetClinicProd/consumers

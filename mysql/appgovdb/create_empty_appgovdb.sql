@@ -9,7 +9,7 @@ CREATE TABLE projects (
   name VARCHAR(30) NOT NULL,
   admin_user VARCHAR(30),
   billing_code VARCHAR(30),
-  UNIQUE INDEX(name,admin_user)
+  UNIQUE INDEX(name)
 ) engine=InnoDB;
 
 # Application Identity table

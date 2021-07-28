@@ -38,6 +38,9 @@ X - JsonString listSafes()
   - JsonString getAccountGroupMembers(safeName)
   - JsonString deleteAccount(accountId)
 
+ Users:
+  - JsonString getUsers(filter)
+
 ******************************************************************
 ******************************************************************/
 
@@ -169,10 +172,14 @@ public class PASJava {
     // ===============================================================
     // JsonString listSafes() - produces list of safes in vault
     //
-    public static String listSafes() {
+    public static String listSafes(String _filter) {
 
-	String requestUrl = pasServerUrl + "/Safes";
+	String requestUrl = pasServerUrl + "/safes";
 	String authHeader = pasSessionToken;
+
+        if(_filter != null) {
+          requestUrl = requestUrl + "?" + _filter;
+        }
 
         logger.log(Level.INFO, "PASJava.listSafes URL: " + requestUrl);
         String safeResponse = JavaREST.httpGet(requestUrl, authHeader);
@@ -531,6 +538,39 @@ public class PASJava {
 
     } // getAccountGroupMembers
 
+
+/*****************************************************************
+ *****************************************************************
+ **			     USERS                              **
+ *****************************************************************
+ *****************************************************************/
+
+    // ===============================================================
+    // JsonString getUsers(filter)
+    //
+    public static String getUsers(String _filter) {
+        String requestUrl = pasServerUrl + "/users";
+        String authHeader = pasSessionToken;
+
+	if(_filter != null) {
+	  requestUrl = requestUrl + "?" + _filter;
+	}
+
+        if(PASJava.DEBUG) {
+	    System.out.println("requestUrl: " + requestUrl);
+	}
+
+        String userResponse = JavaREST.httpGet(requestUrl, authHeader);
+
+        if(PASJava.DEBUG) {
+            System.out.println("Raw users listing:");
+            System.out.println(userResponse);
+            System.out.println("");
+        }
+
+	return userResponse;
+
+    } // getUsers
 
 /*****************************************************************
  *****************************************************************
