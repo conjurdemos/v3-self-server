@@ -12,10 +12,14 @@ main() {
   pasAuthnResponse=$($CURL -H "Authorization: Basic $PASauthnCreds" -H "Content-Type: application/json" "$BASE_URL/pas/login")
   test "paslogin" "$pasAuthnResponse"
 
+  safeResponse=$($CURL -H "Content-Type: application/json" "$BASE_URL/safe?safeName=PetClinicFoo")
+  test "safes" "$safeResponse"
+
+  exit
+
   userResponse=$($CURL -H "Content-Type: application/json" "$BASE_URL/user?userName=Admin1")
   test "users" "$userResponse"
 
-exit
 
   prResponse=$($CURL -H "Content-Type: application/json" "$BASE_URL/project")
   test "projects" "$prResponse"

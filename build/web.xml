@@ -6,39 +6,12 @@
   metadata-complete="true">
 
   <servlet>
-    <servlet-name>ProvisioningServlet</servlet-name>
-    <servlet-class>ProvisioningServlet</servlet-class>
+    <servlet-name>appgovdb</servlet-name>
+    <servlet-class>AppGovDbServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>ProvisioningServlet</servlet-name>
-    <url-pattern>/provision</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>PASServlet</servlet-name>
-    <servlet-class>PASServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>PASServlet</servlet-name>
-    <url-pattern>/pas/login</url-pattern>
-  </servlet-mapping>
-
-  <filter>  
-    <filter-name>PASFilter</filter-name>  
-    <filter-class>PASBasicAuthFilter</filter-class>  
-  </filter>  
-  <filter-mapping>  
-    <filter-name>PASFilter</filter-name>  
-    <url-pattern>/pas/login</url-pattern>  
-  </filter-mapping>  
-
-  <servlet>
-    <servlet-name>ConjurServlet</servlet-name>
-    <servlet-class>ConjurServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ConjurServlet</servlet-name>
-    <url-pattern>/conjur/login</url-pattern>
+    <servlet-name>appgovdb</servlet-name>
+    <url-pattern>/appgovdb</url-pattern>
   </servlet-mapping>
 
   <filter>
@@ -51,21 +24,12 @@
   </filter-mapping>
 
   <servlet>
-    <servlet-name>PASSafeServlet</servlet-name>
-    <servlet-class>PASSafeServlet</servlet-class>
+    <servlet-name>ConjurAccessPolicyServlet</servlet-name>
+    <servlet-class>ConjurAccessPolicyServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>PASSafeServlet</servlet-name>
-    <url-pattern>/pas/safes</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>PASAccountServlet</servlet-name>
-    <servlet-class>PASAccountServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>PASAccountServlet</servlet-name>
-    <url-pattern>/pas/accounts</url-pattern>
+    <servlet-name>ConjurAccessPolicyServlet</servlet-name>
+    <url-pattern>/project/accesspolicy</url-pattern>
   </servlet-mapping>
 
   <servlet>
@@ -74,16 +38,7 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>ConjurBasePolicyServlet</servlet-name>
-    <url-pattern>/conjur/basepolicy</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>ConjurSafePolicyServlet</servlet-name>
-    <servlet-class>ConjurSafePolicyServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ConjurSafePolicyServlet</servlet-name>
-    <url-pattern>/conjur/safepolicy</url-pattern>
+    <url-pattern>/project/basepolicy</url-pattern>
   </servlet-mapping>
 
   <servlet>
@@ -92,52 +47,115 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>ConjurIdentityPolicyServlet</servlet-name>
-    <url-pattern>/conjur/identitypolicy</url-pattern>
+    <url-pattern>/project/identitypolicy</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>ConjurAccessPolicyServlet</servlet-name>
-    <servlet-class>ConjurAccessPolicyServlet</servlet-class>
+    <servlet-name>ConjurSafePolicyServlet</servlet-name>
+    <servlet-class>ConjurSafePolicyServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>ConjurAccessPolicyServlet</servlet-name>
-    <url-pattern>/conjur/accesspolicy</url-pattern>
+    <servlet-name>ConjurSafePolicyServlet</servlet-name>
+    <url-pattern>/project/safepolicy</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>project</servlet-name>
-    <servlet-class>ProjectServlet</servlet-class>
+    <servlet-name>ConjurServlet</servlet-name>
+    <servlet-class>ConjurServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>project</servlet-name>
-    <url-pattern>/project</url-pattern>
+    <servlet-name>ConjurServlet</servlet-name>
+    <url-pattern>/conjur/login</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>user</servlet-name>
+    <servlet-name>ConjurSyncPolicyServlet</servlet-name>
+    <servlet-class>ConjurSyncPolicyServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ConjurSyncPolicyServlet</servlet-name>
+    <url-pattern>/safe/syncpolicy</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>GovernanceServlet</servlet-name>
+    <servlet-class>GovernanceServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GovernanceServlet</servlet-name>
+    <url-pattern>/governance</url-pattern>
+  </servlet-mapping>
+
+  <filter>  
+    <filter-name>PASFilter</filter-name>  
+    <filter-class>PASBasicAuthFilter</filter-class>  
+  </filter>  
+  <filter-mapping>  
+    <filter-name>PASFilter</filter-name>  
+    <url-pattern>/pas/login</url-pattern>  
+  </filter-mapping>  
+
+  <servlet>
+    <servlet-name>PASAccountServlet</servlet-name>
+    <servlet-class>PASAccountServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PASAccountServlet</servlet-name>
+    <url-pattern>/safe/account</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PASSafeMemberServlet</servlet-name>
+    <servlet-class>PASSafeMemberServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PASSafeMemberServlet</servlet-name>
+    <url-pattern>/safe/member</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PASSafeServlet</servlet-name>
+    <servlet-class>PASSafeServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PASSafeServlet</servlet-name>
+    <url-pattern>/safe</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PASServlet</servlet-name>
+    <servlet-class>PASServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PASServlet</servlet-name>
+    <url-pattern>/pas/login</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PASUserServlet</servlet-name>
     <servlet-class>PASUserServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>user</servlet-name>
+    <servlet-name>PASUserServlet</servlet-name>
     <url-pattern>/user</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>appgovdb</servlet-name>
-    <servlet-class>AppGovDbServlet</servlet-class>
+    <servlet-name>ProjectServlet</servlet-name>
+    <servlet-class>ProjectServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>appgovdb</servlet-name>
-    <url-pattern>/appgovdb</url-pattern>
+    <servlet-name>ProjectServlet</servlet-name>
+    <url-pattern>/project</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>governance</servlet-name>
-    <servlet-class>GovernanceServlet</servlet-class>
+    <servlet-name>ProvisioningServlet</servlet-name>
+    <servlet-class>ProvisioningServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>governance</servlet-name>
-    <url-pattern>/governance</url-pattern>
+    <servlet-name>ProvisioningServlet</servlet-name>
+    <url-pattern>/provision</url-pattern>
   </servlet-mapping>
 
 </web-app>

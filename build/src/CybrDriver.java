@@ -70,8 +70,8 @@ public class CybrDriver {
 	String conjurAuthnResponse = ConjurJava.authenticate(conjurAdminName, conjurApiKey);
 
 	// do real work
-	String userQuery= System.getenv("USER_QUERY"); 
-        String userList = PASJava.getUsers(userQuery);
+	String safeQuery= System.getenv("SAFE_QUERY"); 
+        String safeList = PASJava.listSafes(safeQuery);
 
         System.exit(0);
 

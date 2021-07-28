@@ -54,14 +54,12 @@ public class ProvisioningServlet extends HttpServlet {
   }
 
   // +++++++++++++++++++++++++++++++++++++++++
-  // This servlet makes calls to other servlets to provision resources 
-  // implied by access requests, including:
-  //  - PAS safe, if it doesn't exist
-  //  - Conjur Synchronizer policy for safe
-  //  - Conjur project base policy
-  //  - Conjur safe consumer role
-  //  - Conjur host identity 
-  //  - Grant of safe consumer role to host.
+  // Provision an access request by calling other servlets, including:
+  //  - adding an LOB user to the requested safe
+  //  - loading the Conjur Synchronizer policy for safe
+  //  - creating the Conjur safe consumer role in the project policy
+  //  - creating the Conjur host identity in the project policy
+  //  - granting the project's safe consumer role to host.
   // 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)  
@@ -82,195 +80,155 @@ public class ProvisioningServlet extends HttpServlet {
       e.printStackTrace();
     }
 
-    String safeResponse = createSafe(accReqId);	// creates empty safe if not exists 
-						// also sets up Conjur sync policy
-    String basePolicyResponse = createBasePolicy(accReqId);
-    String safePolicyResponse = createSafePolicy(accReqId);
-    String identityPolicyResponse = createIdentityPolicy(accReqId);
-    String accessPolicyResponse = grantAccessPolicy(accReqId);
+    				// assemble access request parameter object from db
+    AccessRequestParameters arParms = getAccessRequestParameters(accReqId);
+    arParms.print();
+
+    String safeAddMemberResponse = addSafeMember(	arParms.pasSafeName,
+							arParms.pasLobName);
+    String safeSyncPolicyResponse = createSafeSyncPolicy(
+							arParms.pasVaultName,
+							arParms.pasLobName,
+							arParms.pasSafeName);
+    String projectSafePolicyResponse = createProjectSafePolicy(
+							arParms.projectName,
+							arParms.pasVaultName,
+							arParms.pasLobName,
+							arParms.pasSafeName);
+    String projectIdentityPolicyResponse = createProjectIdentityPolicy(
+							arParms.projectName,
+							arParms.appIdName);
+    String projectAccessPolicyResponse = createProjectAccessPolicy(
+							arParms.projectName,
+							arParms.appIdName,
+							arParms.pasSafeName);
 
     // mark accessrequest provisioned
     String requestUrl = Config.selfServeBaseUrl+ "/appgovdb?accReqId="+ accReqId
 					+ "&status=provisioned";
     String markedProvisionedResponse = JavaREST.httpPut(requestUrl, "", "");
 
-    logger.log(Level.INFO, "Add safe: "
-		+ "\n  safeResponse:" + safeResponse + ","
-		+ "\n  basePolicyResponse: " + basePolicyResponse
-		+ "\n  safePolicyResponse: " + safePolicyResponse
-		+ "\n  identityPolicyResponse: " + identityPolicyResponse 
-		+ "\n  accessPolicyResponse: " + accessPolicyResponse
+    logger.log(Level.INFO, "Provision access request: "
+		+ "\n  safeAddMemberResponse:" + safeAddMemberResponse + ","
+		+ "\n  safeSyncPolicyResponse:" + safeSyncPolicyResponse + ","
+		+ "\n  projectSafePolicyResponse:" + projectSafePolicyResponse + ","
+		+ "\n  projectIdentityPolicyResponse: " + projectIdentityPolicyResponse 
+		+ "\n  projectAccessPolicyResponse: " + projectAccessPolicyResponse
 		+ "\n  markedProvisionedResponse: " + markedProvisionedResponse);
 
     response.getOutputStream().println("{"
-	+ "\"safeResponse\": " + safeResponse + ", \""
-	+ "\nbasePolicyResponse\": \"" + basePolicyResponse + ", \""
-	+ "\nsafePolicyResponse\": \"" + safePolicyResponse + ", \""
-	+ "\nidentityPolicyResponse\": \"" + identityPolicyResponse + ", \""
-	+ "\naccessPolicyResponse\": \"" + accessPolicyResponse + ", \""
+	+ "\"safeAddMemberResponse\": " + safeAddMemberResponse + ", \""
+	+ "\"safeSyncPolicyResponse\": " + safeSyncPolicyResponse + ", \""
+	+ "\nprojectSafePolicyResponse\": \"" + projectSafePolicyResponse + ", \""
+	+ "\nprojectIdentityPolicyResponse\": \"" + projectIdentityPolicyResponse + ", \""
+	+ "\nprojectAccessPolicyResponse\": \"" + projectAccessPolicyResponse + ", \""
 	+ "\nmarkedProvisionedResponse\": \"" + markedProvisionedResponse
 					+ "\"}");
 
   } // doPost
   
   // +++++++++++++++++++++++++++++++++++
-  // Add a safe w/ Conjur synch policy
-  private static String createSafe(String accReqId) {
-    System.out.println("starting createSafe with accReqId: " + accReqId);
+  // Assemble new AccessRequestParameters object from database
+  private static AccessRequestParameters getAccessRequestParameters(String accReqId) {
     Connection conn = ProvisioningServlet.dbConn;
     String requestUrl = "";
     String safeResponse = "";
+    AccessRequestParameters arParms = new AccessRequestParameters();
     try {
-      String querySql = "SELECT sf.name, sf.cpm_name, sf.vault_name, ar.lob_name "
-			+ " FROM accessrequests ar, safes sf "
-			+ " WHERE ar.id = ? AND ar.safe_id = sf.id";
+      String querySql = "SELECT pr.name, ar.requestor, ar.approved, ar.environment, sf.vault_name, sf.name, sf.cpm_name, ar.lob_name, app.name, app.authn_method"
+			+ " FROM accessrequests ar, safes sf, projects pr, appidentities app"
+			+ " WHERE ar.id = ?"
+			+ " AND ar.safe_id = sf.id"
+			+ " AND ar.project_id = pr.id"
+			+ " AND ar.app_id = app.id";
       System.out.println("executing query: " + querySql + " with accReqId: " + accReqId);
       PreparedStatement prepStmt = conn.prepareStatement(querySql);
       prepStmt.setString(1, accReqId);
       ResultSet rs = prepStmt.executeQuery();
       while(rs.next()) { 		// unique access request id guarantees only one row returned
-        String vaultName = rs.getString("sf.vault_name");
-        String safeName = rs.getString("sf.name");
-        String cpmName = rs.getString("sf.cpm_name");
-        String lobName = rs.getString("ar.lob_name");
-        requestUrl = Config.selfServeBaseUrl + "/pas/safes"
-  						+ "?safeName=" + safeName
-                               			+ "&cpmName=" + cpmName
-                               			+ "&lobName=" + lobName
-                               			+ "&vaultName=" + vaultName;
-        logger.log(Level.INFO, "Add safe: " + requestUrl);
-        safeResponse = JavaREST.httpPost(requestUrl, "", "");
+    	arParms.projectName = rs.getString("pr.name");
+    	arParms.requestor = rs.getString("ar.requestor");
+    	arParms.approved = rs.getInt("ar.approved");
+    	arParms.environment = rs.getString("ar.environment");
+    	arParms.pasVaultName = rs.getString("sf.vault_name");
+    	arParms.pasSafeName = rs.getString("sf.name");
+    	arParms.pasCpmName = rs.getString("sf.cpm_name");
+    	arParms.pasLobName = rs.getString("ar.lob_name");
+    	arParms.appIdName = rs.getString("app.name");
+    	arParms.appAuthnMethod = rs.getString("app.authn_method");
       }
       prepStmt.close();
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return safeResponse;
+    arParms.print();
+    return arParms;
   }
 
   // +++++++++++++++++++++++++++++++++++
-  // Create Conjur base policy for project, per CyberArk PS best-practices
-  private static String createBasePolicy(String accReqId) {
-    Connection conn = ProvisioningServlet.dbConn;
-    String requestUrl = "";
-    String basePolicyResponse = "";
-    try {
-      String querySql = "SELECT pr.name, pr.admin_user "
-		+ "FROM projects pr, accessrequests ar "
-		+ "WHERE ar.id = ? AND ar.project_id = pr.id";
-      PreparedStatement prepStmt = conn.prepareStatement(querySql);
-      prepStmt.setString(1, accReqId);
-      ResultSet rs = prepStmt.executeQuery();
-      while(rs.next()) {
-        String projectName = rs.getString("pr.name");
-        String adminName = rs.getString("pr.admin_user");
-
-        requestUrl = Config.selfServeBaseUrl + "/conjur/basepolicy"
-   		                               + "?projectName=" + projectName
-   		                               + "&adminName=" + adminName;
-
-        logger.log(Level.INFO, "Add base project policy: " + requestUrl);
-        basePolicyResponse = JavaREST.httpPost(requestUrl, "", "");
-      }
-      prepStmt.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return basePolicyResponse;
-  } // createBasePolicy
+  // Add LOB user as member of safe for syncing to Conjur
+  private static String addSafeMember(String safeName, String lobName) {
+    String requestUrl = Config.selfServeBaseUrl + "/safe/member"
+					+ "?safeName=" + safeName
+   		                        + "&lobName=" + lobName;
+    logger.log(Level.INFO, "Add safe member: " + requestUrl);
+    String safeAddMemberResponse = JavaREST.httpPost(requestUrl, "", "");
+    return safeAddMemberResponse;
+  }
 
   // +++++++++++++++++++++++++++++++++++
-  // Create Conjur safe consumers policy for project
-  private static String createSafePolicy(String accReqId) {
-    Connection conn = ProvisioningServlet.dbConn;
-    String requestUrl = "";
-    String safePolicyResponse = "";
-    try {
-      String querySql = "SELECT pr.name, sf.vault_name, sf.name, ar.lob_name "
-		+ "FROM projects pr, accessrequests ar, safes sf "
-		+ "WHERE ar.id = ? AND ar.project_id = pr.id AND ar.safe_id = sf.id";
-      PreparedStatement prepStmt = conn.prepareStatement(querySql);
-      prepStmt.setString(1, accReqId);
-      ResultSet rs = prepStmt.executeQuery();
-      while(rs.next()) {
-        String projectName = rs.getString("pr.name");
-        String vaultName = rs.getString("sf.vault_name");
-        String safeName = rs.getString("sf.name");
-        String lobName = rs.getString("ar.lob_name");
-        requestUrl = Config.selfServeBaseUrl + "/conjur/safepolicy"
-     		                               + "?projectName=" + projectName
-   		                               + "&vaultName=" + vaultName
-   		                               + "&lobName=" + lobName
-   		                               + "&safeName=" + safeName;
-        logger.log(Level.INFO, "Add safe project policy: " + requestUrl);
-        safePolicyResponse = JavaREST.httpPost(requestUrl, "", "");
-      }
-      prepStmt.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return safePolicyResponse;
+  // Create Conjur safe synchronizer policy for project
+  private static String createSafeSyncPolicy(	String vaultName,
+						String lobName,
+						String safeName) {
+    String requestUrl = Config.selfServeBaseUrl + "/safe/syncpolicy"
+					+ "?vaultName=" + vaultName
+   		                        + "&lobName=" + lobName
+   		                        + "&safeName=" + safeName;
+    logger.log(Level.INFO, "Create safe synch policy: " + requestUrl);
+    return JavaREST.httpPost(requestUrl, "", "");
+  }
+
+  // +++++++++++++++++++++++++++++++++++
+  // Create Conjur safe consumer policy for project
+  private static String createProjectSafePolicy(String projectName,
+						String vaultName,
+						String lobName,
+						String safeName) {
+    String requestUrl = Config.selfServeBaseUrl + "/project/safepolicy"
+					+ "?projectName=" + projectName
+					+ "&vaultName=" + vaultName
+   		                        + "&lobName=" + lobName
+   		                        + "&safeName=" + safeName;
+    logger.log(Level.INFO, "Create safe synch policy: " + requestUrl);
+    return JavaREST.httpPost(requestUrl, "", "");
   }
 
   // +++++++++++++++++++++++++++++++++++
   // Create Conjur identity policy for project
-  private static String createIdentityPolicy(String accReqId) {
-    Connection conn = ProvisioningServlet.dbConn;
-    String requestUrl = "";
-    String identityPolicyResponse = "";
-    try {
-      String querySql =  "SELECT pr.name, appid.name "
-		+ "FROM projects pr, appidentities appid, accessrequests ar "
-		+ "WHERE ar.id = ? AND ar.project_id = pr.id AND ar.app_id = appid.id";
-      PreparedStatement prepStmt = conn.prepareStatement(querySql);
-      prepStmt.setString(1, accReqId);
-      ResultSet rs = prepStmt.executeQuery();
-      while(rs.next()) {
-        String projectName = rs.getString("pr.name");
-        String idName = rs.getString("appid.name");
-        requestUrl = Config.selfServeBaseUrl + "/conjur/identitypolicy"
+  private static String createProjectIdentityPolicy(
+		  				String projectName,
+						String idName) {
+    String requestUrl = Config.selfServeBaseUrl + "/project/identitypolicy"
    		                               + "?projectName=" + projectName
    		                               + "&identityName=" + idName;
-        logger.log(Level.INFO, "Add identity policy: " + requestUrl);
-        identityPolicyResponse = identityPolicyResponse + JavaREST.httpPost(requestUrl, "", "");
-      }
-      prepStmt.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return identityPolicyResponse;
+    logger.log(Level.INFO, "Create project identity policy: " + requestUrl);
+    return JavaREST.httpPost(requestUrl, "", "");
   }
 
   // +++++++++++++++++++++++++++++++++++
-  // Grant safe/consumers group role to identity
-  private static String grantAccessPolicy(String accReqId) {
-    Connection conn = ProvisioningServlet.dbConn;
-    String requestUrl = "";
-    String accessPolicyResponse = "";
-    try {
-      String querySql = "SELECT pr.name, appid.name, sf.name "
-		+ "FROM projects pr, appidentities appid, accessrequests ar, safes sf "
-		+ "WHERE ar.id = ? AND ar.app_id = appid.id AND ar.project_id = pr.id AND ar.safe_id = sf.id";
-      PreparedStatement prepStmt = conn.prepareStatement(querySql);
-      prepStmt.setString(1, accReqId);
-      ResultSet rs = prepStmt.executeQuery();
-      while(rs.next()) {
-        String projectName = rs.getString("pr.name");
-        String idName = rs.getString("appid.name");
-        String safeName = rs.getString("sf.name");
-        requestUrl = Config.selfServeBaseUrl + "/conjur/accesspolicy"
+  // Grant project safe/consumers group role to identity
+  private static String createProjectAccessPolicy(
+		  				String projectName,
+						String appIdName,
+						String safeName) {
+    String requestUrl = Config.selfServeBaseUrl + "/project/accesspolicy"
    		                             + "?projectName=" + projectName
-   		                             + "&identityName=" + idName
+   		                             + "&identityName=" + appIdName
    		                             + "&groupRoleName=" + safeName + "/consumers";
-        logger.log(Level.INFO, "Add access policy: " + requestUrl);
-        accessPolicyResponse = accessPolicyResponse + JavaREST.httpPost(requestUrl, "", "");
-      }
-      prepStmt.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return accessPolicyResponse;
-  } //createAccessPolicy
+    logger.log(Level.INFO, "Grant project access policy: " + requestUrl);
+    return JavaREST.httpPost(requestUrl, "", "");
+  }
 
   // +++++++++++++++++++++++++++++++++++++++++
   // Revokes access grant and deletes safe consumers group for a project, thereby 
@@ -342,7 +300,7 @@ public class ProvisioningServlet extends HttpServlet {
         String projectName = rs.getString("pr.name");
         String idName = rs.getString("appid.name");
         String safeName = rs.getString("sf.name");
-        requestUrl = Config.selfServeBaseUrl + "/conjur/accesspolicy"
+        requestUrl = Config.selfServeBaseUrl + "/project/accesspolicy"
    		                             + "?projectName=" + projectName
    		                             + "&identityName=" + idName
    		                             + "&groupRoleName=" + safeName + "/consumers";
@@ -372,7 +330,7 @@ public class ProvisioningServlet extends HttpServlet {
       while(rs.next()) {
         String projectName = rs.getString("pr.name");
         String idName = rs.getString("appid.name");
-        requestUrl = Config.selfServeBaseUrl + "/conjur/identitypolicy"
+        requestUrl = Config.selfServeBaseUrl + "/project/identitypolicy"
    		                               + "?projectName=" + projectName
    		                               + "&identityName=" + idName;
         logger.log(Level.INFO, "Delete identity policy: " + requestUrl);
@@ -403,7 +361,7 @@ public class ProvisioningServlet extends HttpServlet {
         String safeName = rs.getString("sf.name");
         String vaultName = rs.getString("sf.vault_name");
         String lobName = rs.getString("ar.lob_name");
-        requestUrl = Config.selfServeBaseUrl + "/conjur/safepolicy"
+        requestUrl = Config.selfServeBaseUrl + "/project/safepolicy"
      		                               + "?projectName=" + projectName
    		                               + "&vaultName=" + vaultName
    		                               + "&lobName=" + lobName
@@ -435,7 +393,7 @@ public class ProvisioningServlet extends HttpServlet {
         String projectName = rs.getString("pr.name");
         String adminName = rs.getString("pr.admin_user");
 
-        requestUrl = Config.selfServeBaseUrl + "/conjur/basepolicy"
+        requestUrl = Config.selfServeBaseUrl + "/project/basepolicy"
    		                               + "?projectName=" + projectName
    		                               + "&adminName=" + adminName;
         logger.log(Level.INFO, "Add base project policy: " + requestUrl);

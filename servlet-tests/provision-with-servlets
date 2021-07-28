@@ -25,36 +25,43 @@ main() {
   conjurAuthnResponse=$($CURL -H "Authorization: Basic $ConjurAuthnCreds" -H "Content-Type: application/json" "$BASE_URL/conjur/login")
   test "conjurlogin" "$conjurAuthnResponse"
 
-  # Add a safe w/ Conjur synch policy (safe is only created if it doesn't exist)
-  safeAdd=$($CURL -X POST --url "$BASE_URL/pas/safes?safeName=$PAS_SAFE_NAME&cpmName=$PAS_CPM_NAME&lobName=$PAS_LOB_NAME&vaultName=$PAS_VAULT_NAME")
-  test "safeAdd" "$safeAdd"
+  # Add LOB user as member of safe for synchronization to Conjur
+  safeMemberAdd=$($CURL -X POST --url "$BASE_URL/safe?safeName=$PAS_SAFE_NAME&lobName=$PAS_LOB_NAME")
+  test "safeMemberAdd" "$safeMemberAdd"
+
+  read -n 1 -s -r -p "Press any key to continue"
+  echo
+
+  # Create Conjur sync policy for project
+  authnResponse=$($CURL --request POST --url "$BASE_URL/safe/syncpolicy?vaultName=$PAS_VAULT_NAME&safeName=$PAS_SAFE_NAME&lobName=$PAS_LOB_NAME")
+  test "basePolicy" "$authnResponse"
 
   read -n 1 -s -r -p "Press any key to continue"
   echo
 
   # Create Conjur base policy for project
-  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/basepolicy?projectName=$PROJECT_NAME&adminName=$PROJECT_ADMIN")
+  authnResponse=$($CURL --request POST --url "$BASE_URL/project/basepolicy?projectName=$PROJECT_NAME&adminName=$PROJECT_ADMIN")
   test "basePolicy" "$authnResponse"
 
   read -n 1 -s -r -p "Press any key to continue"
   echo
 
   # Create Conjur safe consumer group under project's base policy
-  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/safepolicy?projectName=$PROJECT_NAME&vaultName=$PAS_VAULT_NAME&lobName=$PAS_LOB_NAME&safeName=$PAS_SAFE_NAME")
+  authnResponse=$($CURL --request POST --url "$BASE_URL/project/safepolicy?projectName=$PROJECT_NAME&vaultName=$PAS_VAULT_NAME&lobName=$PAS_LOB_NAME&safeName=$PAS_SAFE_NAME")
   test "safePolicy" "$authnResponse"
 
   read -n 1 -s -r -p "Press any key to continue"
   echo
 
   # Create Conjur identity under project's base policy
-  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/identitypolicy?projectName=$PROJECT_NAME&identityName=$PROJECT_IDENTITY")
+  authnResponse=$($CURL --request POST --url "$BASE_URL/project/identitypolicy?projectName=$PROJECT_NAME&identityName=$PROJECT_IDENTITY")
   test "identityPolicy" "$authnResponse"
 
   read -n 1 -s -r -p "Press any key to continue"
   echo
 
   # Grant safe policy role to identity 
-  authnResponse=$($CURL --request POST --url "$BASE_URL/conjur/accesspolicy?projectName=$PROJECT_NAME&identityName=$CONJUR_IDENTITY&groupRoleName=$CONJUR_GROUP_ROLE")
+  authnResponse=$($CURL --request POST --url "$BASE_URL/project/accesspolicy?projectName=$PROJECT_NAME&identityName=$PROJECT_IDENTITY&groupRoleName=$PROJECT_GROUP_ROLE")
   test "accessgrant" "$authnResponse"
 }
 

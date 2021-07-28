@@ -3,7 +3,7 @@ source ./cybrtest.config
 
 export ACCESS_LOG_LINES=10
 export TOMCAT_DATED_LOG_LINES=20
-export TOMCAT_SERVER_LOG_LINES=80
+export TOMCAT_SERVER_LOG_LINES=120
 
 DATESTAMP=$(date +%Y-%m-%d)
 echo

@@ -139,6 +139,7 @@ public class ProjectServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
 
+
     String jb = "";
     String line = null;
     try {
@@ -186,6 +187,27 @@ public class ProjectServlet extends HttpServlet {
                                 + "\n  values: " + prParms.projectName + ", " + prParms.adminName + ", " + prParms.billingCode);
       e.printStackTrace();
     }
+
+    String pasToken = PASJava.logon(Config.pasAdminUser, Config.pasAdminPassword);
+
+				// create project secrets safe
+				// add LOB user
+				// add admin user 
+
+				// create project admin safe
+				// add admin user
+
+    				// create base policy in Conjur for project
+    String conjurApiKey = ConjurJava.authnLogin(Config.conjurAdminUser, Config.conjurAdminPassword);
+    String conjurToken = ConjurJava.authenticate(Config.conjurAdminUser, conjurApiKey);
+    String requestUrl = Config.selfServeBaseUrl + "/project/basepolicy"
+                                             + "?projectName=" + prParms.projectName
+                                             + "&adminName=" + prParms.adminName;
+    logger.log(Level.INFO, "Create project base policy: " + requestUrl);
+    JavaREST.httpPost(requestUrl, "", "");
+
+				// rotate project admin host (non-human) api key 
+				// create account in admin-safe for admin host (non-human) api key 
 
   } // doPost
     

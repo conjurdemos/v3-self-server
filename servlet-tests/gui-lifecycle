@@ -22,8 +22,6 @@ main() {
   projResponse=$($CURL -X POST -H "Content-Type: application/json" --data "$prJsonTest" "$BASE_URL/project")
   test "OnboardProject" "$projResponse"
 
-exit
-
   echo "Submitting unapproved access request (appgovdb POST)..."
   appDbResponse=$($CURL -X POST -H "Content-Type: application/json" --data "$arJsonTest" "$BASE_URL/appgovdb")
   test "submitRequest" "$appDbResponse"

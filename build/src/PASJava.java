@@ -172,10 +172,14 @@ public class PASJava {
     // ===============================================================
     // JsonString listSafes() - produces list of safes in vault
     //
-    public static String listSafes() {
+    public static String listSafes(String _filter) {
 
-	String requestUrl = pasServerUrl + "/Safes";
+	String requestUrl = pasServerUrl + "/safes";
 	String authHeader = pasSessionToken;
+
+        if(_filter != null) {
+          requestUrl = requestUrl + "?" + _filter;
+        }
 
         logger.log(Level.INFO, "PASJava.listSafes URL: " + requestUrl);
         String safeResponse = JavaREST.httpGet(requestUrl, authHeader);
