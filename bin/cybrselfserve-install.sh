@@ -8,7 +8,7 @@ main() {
   init-appgovdb
   install-ssh
   install-java
-  install-tomcat
+  install-tomcat9
   sudo apt install -y git ant curl jq
   echo "Installation complete."
   echo
@@ -43,10 +43,10 @@ install-java() {
 }
 
 #############################
-install-tomcat() {
+install-tomcat9() {
   sudo groupadd tomcat
   sudo useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
-  wget http://www-us.apache.org/dist/tomcat/tomcat-9/v9.0.$TOMCAT_MINOR_VERSION/bin/apache-tomcat-9.0.$TOMCAT_MINOR_VERSION.tar.gz
+  wget http://downloads.apache.org/tomcat/tomcat-9/v9.0.$TOMCAT_MINOR_VERSION/bin/apache-tomcat-9.0.$TOMCAT_MINOR_VERSION.tar.gz
   tar xzf apache-tomcat-9.0.$TOMCAT_MINOR_VERSION.tar.gz
   rm apache-tomcat-9.0.$TOMCAT_MINOR_VERSION.tar.gz
   sudo mv apache-tomcat-9.0.$TOMCAT_MINOR_VERSION /usr/local/tomcat9
