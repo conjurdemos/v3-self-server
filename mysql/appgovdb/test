@@ -1,4 +1,3 @@
 SELECT pr.name, ar.requestor, ar.approved, ar.environment, sf.vault_name, sf.name, sf.cpm_name, ar.lob_name, ap.name, ap.authn_method 
 FROM accessrequests ar, safes sf, projects pr, appidentities ap 
-WHERE ar.id = 2 
-AND ar.safe_id = sf.id AND ar.project_id = pr.id AND ar.app_id = ar.id;
+WHERE ar.safe_id = sf.id AND ar.project_id = pr.id AND ar.app_id = ar.id;

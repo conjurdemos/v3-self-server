@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Apache Tomcat download page: https://tomcat.apache.org/download-90.cgi
-export TOMCAT_MINOR_VERSION=50
+export TOMCAT_MINOR_VERSION=54
 
 main() {
   install-mysql8	# run this first cuz it requires user input
